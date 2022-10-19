@@ -1,6 +1,6 @@
 namespace GameApp;
 
-public sealed class Random : System.Random
+internal sealed class Random : System.Random
 {
     public Vector2D NextVector(Vector2D minValue, Vector2D maxValue)
     {

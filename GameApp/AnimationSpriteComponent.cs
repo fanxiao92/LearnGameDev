@@ -1,6 +1,6 @@
 ﻿namespace GameApp;
 
-public sealed class AnimationSpriteComponent : SpriteComponent
+internal sealed class AnimationSpriteComponent : SpriteComponent
 {
     private float _currFrame;
     private const float AnimationFps = 24.0f;

@@ -1,6 +1,6 @@
 ﻿namespace GameApp;
 
-public class SpriteComponent : Component
+internal class SpriteComponent : Component
 {
     public int DrawOrder { get; }
 

@@ -1,77 +1,40 @@
-﻿namespace GameApp;
-
-public sealed class Ship : Actor
+﻿namespace GameApp
 {
-    private float _rightSpeed;
-    private float _downSpeed;
-
-    public Ship(Game game) : base(game)
+    internal sealed class Ship : Actor
     {
-        var asc = new AnimationSpriteComponent(this);
-        asc.SetAnimationTextures(new List<IntPtr>
+        private float _laserCooldown;
+
+        public Ship(Game game) : base(game)
         {
-            game.GetTexture("Assets/Ship01.png"),
-            game.GetTexture("Assets/Ship02.png"),
-            game.GetTexture("Assets/Ship03.png"),
-            game.GetTexture("Assets/Ship04.png"),
-        });
+            var _1 = new SpriteComponent(this) { Texture = game.GetTexture("assets/Ship.png") };
+
+            var _2 = new InputComponent(this)
+            {
+                ForwardKey = SDL.SDL_Scancode.SDL_SCANCODE_W,
+                BackKey = SDL.SDL_Scancode.SDL_SCANCODE_S,
+                ClockwiseKey = SDL.SDL_Scancode.SDL_SCANCODE_A,
+                CounterClockwiseKey = SDL.SDL_Scancode.SDL_SCANCODE_D,
+                MaxForwardSpeed = 300.0f,
+                MaxAngularSpeed = (float)System.Math.PI * 2,
+            };
+        }
+
+        protected override void ActorInput(byte[] keyState)
+        {
+            if (keyState[(int)SDL.SDL_Scancode.SDL_SCANCODE_SPACE] == 1 && _laserCooldown <= 0.0f)
+            {
+                var _ = new Laser(Game)
+                {
+                    Position = Position,
+                    Rotation = Rotation,
+                };
+
+                _laserCooldown = 0.5f;
+            }
+        }
+
+        protected override void UpdateActor(float deltaTime) => _laserCooldown -= deltaTime;
     }
 
-    protected override void UpdateActor(float deltaTime)
-    {
-        base.UpdateActor(deltaTime);
-
-        Vector2D position = Position;
-        position.X += _rightSpeed * deltaTime;
-        position.Y += _downSpeed * deltaTime;
-
-        if (position.X < 25.0f)
-        {
-            position.X = 25.0f;
-        }
-        else if (position.X > 500.0f)
-        {
-            position.X = 500.0f;
-        }
-
-        if (position.Y < 25.0f)
-        {
-            position.Y = 25.0f;
-        }
-        else if (position.Y >= 743.0f)
-        {
-            position.Y = 743.0f;
-        }
-
-        Position = position;
-    }
-
-    public void ProcessKeyboard(byte[] state)
-    {
-        _rightSpeed = 0.0f;
-        _downSpeed = 0.0f;
-
-        if (state[(int)SDL.SDL_Scancode.SDL_SCANCODE_D] == 1)
-        {
-            _rightSpeed += 250.0f;
-        }
-        if (state[(int)SDL.SDL_Scancode.SDL_SCANCODE_A] == 1)
-        {
-            _rightSpeed -= 250.0f;
-        }
-
-        if (state[(int)SDL.SDL_Scancode.SDL_SCANCODE_S] == 1)
-        {
-            _downSpeed += 300.0f;
-        }
-        if (state[(int)SDL.SDL_Scancode.SDL_SCANCODE_W] == 1)
-        {
-            _downSpeed -= 300.0f;
-        }
-
-        if (state[(int)SDL.SDL_Scancode.SDL_SCANCODE_X] == 1)
-        {
-            _state = State.Dead;
-        }
-    }
 }
+

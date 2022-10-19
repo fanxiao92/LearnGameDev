@@ -1,6 +1,6 @@
 ﻿namespace GameApp;
 
-public sealed class BackGroundSpriteComponent : SpriteComponent
+internal sealed class BackGroundSpriteComponent : SpriteComponent
 {
     private class BackGroundTexture
     {

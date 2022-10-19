@@ -2,7 +2,7 @@
 
 namespace GameApp;
 
-public class Game
+internal class Game
 {
     public Random Random { get; } = new();
     public const float WindowWidth = 1024.0f;
@@ -21,6 +21,7 @@ public class Game
     private bool _isUpdatingActors;
     private readonly List<Actor> _pendingActors = new();
     private readonly List<Actor> _actors = new();
+    private readonly List<Asteroid> _asteroids = new();
     private readonly Dictionary<string, IntPtr> _name2Texture = new();
     private readonly List<SpriteComponent> _sprites = new();
 
@@ -31,7 +32,7 @@ public class Game
             return texture;
         }
 
-        var surf = SDL_image.IMG_Load(fileName);
+        IntPtr surf = SDL_image.IMG_Load(fileName);
         if (surf == IntPtr.Zero)
         {
             SDL.SDL_Log($"Failed to load texture file: {fileName}");
@@ -54,34 +55,11 @@ public class Game
     {
         // Create player's ship
         _ship = new Ship(this) { Position = new Vector2D { X = 100.0f, Y = 384.0f }, Scale = 1.5f };
-        // Create actor for the background(this doesn't need a subclass)
-        var tmp = new Actor(this) { Position = new Vector2D { X = 512.0f, Y = 384.0f } };
-        // Create the "far back" background
-        var bg = new BackGroundSpriteComponent(tmp)
-        {
-            ScreenSize = new Vector2D { X = WindowWidth, Y = WindowHeight },
-            ScrollSpeed = -100.0f
-        };
-        bg.SetBackGroundTextures(new List<IntPtr>
-        {
-            GetTexture("Assets/Farback01.png"),
-            GetTexture("Assets/Farback02.png"),
-        });
-        // Create the closer background
-        bg = new BackGroundSpriteComponent(tmp, 50)
-        {
-            ScreenSize = new Vector2D { X = WindowWidth, Y = WindowHeight },
-            ScrollSpeed = -200.0f
-        };
-        bg.SetBackGroundTextures(new List<IntPtr>
-        {
-            GetTexture("Assets/Stars.png"),
-            GetTexture("Assets/Stars.png"),
-        });
 
+        // Create asteroids
         for (int i = 0; i < 20; i++)
         {
-            new Asteroid(this);
+            var _ = new Asteroid(this);
         }
     }
 
@@ -132,23 +110,28 @@ public class Game
     {
         while (SDL.SDL_PollEvent(out SDL.SDL_Event e) != 0)
         {
-            switch (e.type)
+            if (e.type == SDL.SDL_EventType.SDL_QUIT)
             {
-                case SDL.SDL_EventType.SDL_QUIT:
-                    _shouldShutdown = true;
-                    break;
+                _shouldShutdown = true;
             }
         }
 
         IntPtr state = SDL.SDL_GetKeyboardState(out int size);
         byte[] keys = new byte[size];
         Marshal.Copy(state, keys, 0, size);
+
         if (keys[(int)SDL.SDL_Scancode.SDL_SCANCODE_ESCAPE] == 1)
         {
             _shouldShutdown = true;
         }
 
-        _ship?.ProcessKeyboard(keys);
+        _isUpdatingActors = true;
+        foreach (Actor actor in _actors)
+        {
+            actor.ProcessInput(keys);
+        }
+        _isUpdatingActors = false;
+
     }
 
     private void UpdateGame(float deltaTime)
@@ -184,6 +167,11 @@ public class Game
             {
                 _ship = null;
             }
+
+            if (actor is Asteroid asteroid)
+            {
+                _asteroids.Remove(asteroid);
+            }
         }
     }
 
@@ -213,7 +201,7 @@ public class Game
         _lastTime = DateTime.Now;
         while (!_shouldShutdown)
         {
-            DateTime currTime =  DateTime.Now;
+            DateTime currTime = DateTime.Now;
             long diffTick = (currTime - _lastTime).Ticks;
             if (diffTick > 50 * TimeSpan.TicksPerMillisecond)
             {
@@ -266,6 +254,11 @@ public class Game
         else
         {
             _actors.Add(actor);
+
+            if (actor is Asteroid asteroid)
+            {
+                _asteroids.Add(asteroid);
+            }
         }
     }
 
@@ -275,7 +268,7 @@ public class Game
         int index = 0;
         for (; index < _sprites.Count; index++)
         {
-            if (drawOrder < _sprites[index].DrawOrder )
+            if (drawOrder < _sprites[index].DrawOrder)
             {
                 break;
             }
@@ -287,5 +280,10 @@ public class Game
     public void RemoveSprite(SpriteComponent sprite)
     {
         _sprites.Remove(sprite);
+    }
+
+    public IEnumerable<Asteroid> GetAsteroids()
+    {
+        return _asteroids;
     }
 }

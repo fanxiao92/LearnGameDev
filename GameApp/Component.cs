@@ -1,24 +1,30 @@
-﻿namespace GameApp;
-
-public abstract class Component
+﻿namespace GameApp
 {
-    protected Actor Owner { get; }
-
-    public int UpdateOrder { get; }
-
-    protected Component(Actor owner, int updateOrder = 10)
+    internal abstract class Component
     {
-        Owner = owner;
-        UpdateOrder = updateOrder;
+        protected Actor Owner { get; }
 
-        owner.AddComponent(this);
-    }
+        public int UpdateOrder { get; }
 
-    public virtual void Update(float deltaTime)
-    {
-    }
+        protected Component(Actor owner, int updateOrder = 100)
+        {
+            Owner = owner;
+            UpdateOrder = updateOrder;
 
-    public virtual void Remove()
-    {
+            owner.AddComponent(this);
+        }
+
+        public virtual void Update(float deltaTime)
+        {
+        }
+
+        public virtual void Remove()
+        {
+        }
+
+        public virtual void ProcessInput(byte[] keyState)
+        {
+        }
     }
 }
+
